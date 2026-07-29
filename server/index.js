@@ -4,11 +4,15 @@ require('dotenv').config();
 
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const compression = require('compression');
 const logger = require('./config/logger');
 const { scheduleBackups } = require('./scripts/backup');
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Compresión de respuestas HTTP (GZIP)
+app.use(compression());
 
 // Seguridad básica
 app.use(helmet());

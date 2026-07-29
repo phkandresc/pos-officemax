@@ -147,6 +147,7 @@ const useCartStore = create(
             monto_recibido: (!isNaN(montoRecibido) && montoRecibido > 0) ? montoRecibido : null,
             imprimir_ticket: state.imprimirTicket
         };
+    }
     }),
     {
         name: 'pos-cart-storage', // nombre en localStorage

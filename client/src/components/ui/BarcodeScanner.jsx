@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { Camera, X, AlertCircle } from 'lucide-react';
 
-const BarcodeScanner = ({ isOpen, onClose, onScanSuccess }) => {
+const BarcodeScanner = React.memo(({ isOpen, onClose, onScanSuccess }) => {
     const scannerRef = useRef(null);
     const [scanError, setScanError] = useState(null);
 
@@ -109,6 +109,6 @@ const BarcodeScanner = ({ isOpen, onClose, onScanSuccess }) => {
             </div>
         </div>
     );
-};
+});
 
 export default BarcodeScanner;

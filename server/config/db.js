@@ -5,7 +5,7 @@ require('dotenv').config();
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     // Configuraciones recomendadas para evitar problemas de timeouts en conexiones LAN/locales
-    max: 20,
+    max: 10, // Optimizado para PC de bajos recursos
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
 });
