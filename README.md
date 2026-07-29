@@ -1,15 +1,15 @@
 # POS OfficeMax - Sistema de Punto de Venta e Inventario (MVP)
 
-Sistema web moderno de Punto de Venta (POS), control de inventario (Kardex), gestión de clientes/usuarios, y cuadre de caja diseñado específicamente para papelerías y pequeños comercios.
+Sistema web moderno de Punto de Venta (POS), control de inventario (Kardex), gestión de clientes/usuarios, y cuadre de caja diseñado específicamente para papelerías y pequeños comercios. El sistema respeta las reglas de negocio de inmutabilidad contable y gestión mixta de ítems (Físicos, Servicios y Recargas).
 
 ---
 
 ## 🚀 Arquitectura y Tecnologías
 
 *   **Backend**: Node.js, Express, PostgreSQL (`pg`), JWT, `bcrypt`, `node-thermal-printer`.
-*   **Frontend**: React 19, Vite 7, Tailwind CSS v4 con sistema de tokens personalizados, Zustand, `html5-qrcode`, `lucide-react`.
-*   **Base de Datos**: PostgreSQL 18.1+ con inmutabilidad contable (precios y costos históricos registrados por transacción).
-*   **Paleta de Colores Oficial (Rebranding OfficeMax)**:
+*   **Frontend**: React 19, Vite 7, Tailwind CSS v4 con sistema de tokens personalizados (Rebranding OfficeMax), Zustand, `html5-qrcode`, `lucide-react`.
+*   **Base de Datos**: PostgreSQL 18.1+ con inmutabilidad contable (precios y costos históricos registrados por transacción) y protección referencial estricta.
+*   **Paleta de Colores Oficial (OfficeMax)**:
     *   **Naranja (Primario)**: `#F64C29`
     *   **Rojo Cálido (Secundario/Hover)**: `#F22C36`
     *   **Superficies y Sidebar**: `#000000` / `#111111` (Gris Oscuro / Negro Premium)
@@ -34,87 +34,102 @@ pos-officemax/
 │   ├── config/                # Configuración de base de datos y variables
 │   ├── controllers/           # Controladores de la API REST
 │   ├── middleware/            # Middlewares (Autenticación JWT, verificación de Roles)
-│   ├── models/                # Modelos de consulta a PostgreSQL
+│   ├── models/                # Modelos de consulta a PostgreSQL (Transacciones atómicas)
 │   ├── routes/                # Enrutadores Express (Auth, Productos, Ventas, Caja, etc.)
 │   ├── scripts/               # Scripts de mantenimiento y pruebas del servidor
-│   └── index.js               # Punto de entrada principal de la API
+│   └── index.js               # Punto de entrada principal de la API con CORS abierto para LAN
 ├── contexto.md                 # Especificaciones del negocio y arquitectura maestra
 └── README.md
 ```
 
 ---
 
-## ⚙️ Configuración e Instalación
+## 🖥️ Guía de Instalación para Windows (Entorno Local On-Premise)
 
-### 1. Base de Datos (PostgreSQL)
-Crea una base de datos en PostgreSQL llamada `pos_papeleria` e importa el esquema base:
+El sistema está diseñado para correr localmente (On-Premise) en una PC principal con Windows (servidor) y ser accesible a través de la red local (LAN) vía Wi-Fi por dispositivos móviles o tablets.
 
-```bash
-psql -U postgres -d pos_papeleria -f database/schema.sql
-```
+### 1. Requisitos Previos en Windows
+1.  **Node.js**: Descarga e instala la última versión LTS (Long Term Support) desde [nodejs.org](https://nodejs.org/). Asegúrate de marcar la casilla "Automatically install the necessary tools..." durante la instalación (instala Chocolatey y las dependencias de compilación para C++).
+2.  **PostgreSQL**: Descarga e instala PostgreSQL (versión 14 o superior recomendada) desde [postgresql.org](https://www.postgresql.org/download/windows/). Recuerda la contraseña que configures para el usuario `postgres`.
+3.  **Git**: Para clonar el repositorio (opcional si descargas el ZIP).
 
-Aplica las migraciones requeridas ubicadas en `database/migrations/` en orden cronológico si corresponde.
+### 2. Configuración de la Base de Datos
+1. Abre **pgAdmin** (se instala junto con PostgreSQL) o la consola `psql`.
+2. Crea una nueva base de datos llamada `pos_papeleria`.
+3. Importa el esquema de la base de datos ubicado en la carpeta del proyecto. Usando la línea de comandos de Windows (CMD) o PowerShell en la raíz del proyecto:
+   ```cmd
+   psql -U postgres -d pos_papeleria -f database/schema.sql
+   ```
+   *(Te pedirá la contraseña del usuario postgres)*
 
-### 2. Configuración del Backend
-Navega a la carpeta `server/`, instala las dependencias y configura las variables de entorno:
+### 3. Configuración y Arranque del Backend (Servidor API)
+Abre una terminal (CMD/PowerShell) y navega a la carpeta del servidor:
 
-```bash
-cd server
+```cmd
+cd pos-officemax\server
 npm install
 ```
+> **Nota de Compatibilidad (bcrypt):** Si el comando `npm install` falla en Windows al intentar compilar `bcrypt` (errores de `node-gyp` o Visual Studio), puedes desinstalarlo y usar la versión 100% JavaScript:
+> `npm uninstall bcrypt && npm install bcryptjs`
+> Y luego reemplazar `require('bcrypt')` por `require('bcryptjs')` en tu código si fuera necesario (aunque generalmente los pre-compilados de `bcrypt` funcionan bien en Node 18+ en Windows).
 
-Crea o edita el archivo `.env` en la raíz de `server/`:
+Crea el archivo de configuración `.env` en la carpeta `server/` copiando estas variables:
 
 ```env
 PORT=3000
+# Reemplaza 'TU_CONTRASEÑA' con la contraseña que le pusiste a PostgreSQL
 DATABASE_URL=postgres://postgres:TU_CONTRASEÑA@127.0.0.1:5432/pos_papeleria
 NODE_ENV=development
 
-# Impresora Epson TM-U220D (ESC/POS)
-PRINTER_ENABLED=false # Cambiar a true para producción e impresión física
-PRINTER_INTERFACE=usb
-PRINTER_PORT=/dev/usb/lp0 # En Windows usa puertos COM (ej: COM3) o red (ej: \\localhost\Impresora)
+# Configuración de Hardware (Impresora Epson TM-U220D)
+PRINTER_ENABLED=true
+PRINTER_INTERFACE=serial
+# En Windows, averigua qué puerto COM usa tu impresora (ej. COM3).
+# Si está compartida en red, usa: \\localhost\NombreDeTuImpresora
+PRINTER_PORT=COM3 
 PRINTER_BAUD_RATE=9600
 PRINTER_WIDTH=40
 
-# Contenido del Ticket
+# Personalización del Ticket Comercial
 TICKET_NOMBRE_NEGOCIO=PAPELERIA OFFICEMAX
 TICKET_RUC=9999999999001
 TICKET_DIRECCION=Cuenca - Ecuador
 TICKET_TELEFONO=0999999999
-TICKET_MENSAJE_PIE=Gracias por su compra!
+TICKET_MENSAJE_PIE=¡Gracias por su compra!
 TICKET_TIPO_DOCUMENTO=Nota de Venta
 TICKET_ABRIR_CAJON=true
 ```
 
-Inicia el servidor de desarrollo del Backend:
-```bash
+Inicia el servidor backend:
+```cmd
 npm run dev
 ```
 
-### 3. Configuración del Frontend
-Navega a la carpeta `client/`, instala las dependencias e inicia el servidor de desarrollo:
+### 4. Configuración y Arranque del Frontend (Interfaz Web)
+Abre *otra* nueva ventana de terminal (CMD/PowerShell), mantén el backend corriendo, y ejecuta:
 
-```bash
-cd ../client
+```cmd
+cd pos-officemax\client
 npm install
 npm run dev
 ```
 
-*Nota: El frontend está configurado con HTTPS mediante certificados autofirmados por motivos de seguridad en producción y pruebas. En tu navegador, acepta la advertencia de seguridad para entrar a `https://localhost:5173`.*
+### 5. Acceso al Sistema
+*   **Desde la PC Servidor (Windows):** Abre tu navegador en `http://localhost:5173`
+*   **Desde un Celular/Tablet en la misma red Wi-Fi:**
+    1. Averigua la dirección IP local de tu PC Windows (Abre CMD y escribe `ipconfig`. Busca "Dirección IPv4" ej. `192.168.1.15`).
+    2. En el navegador del celular, ingresa: `http://192.168.1.15:5173`
+    *(El backend está configurado con CORS abierto para permitir esta conexión móvil sin problemas).*
 
 ---
 
-## 💻 Compatibilidad con Windows (Desarrollo y Pruebas)
+## 🔐 Credenciales de Acceso por Defecto
 
-El proyecto es totalmente compatible con Windows (CMD o PowerShell). Si migras el proyecto de Linux a Windows, ten en cuenta los siguientes puntos:
+Usa estas credenciales para ingresar al sistema y empezar a probar el Punto de Venta:
 
-1.  **PostgreSQL**: Asegúrate de tener el motor de PostgreSQL corriendo localmente en el puerto `5432` y con las credenciales correspondientes en tu archivo `server/.env`.
-2.  **Impresora de Tickets**: Cambia el puerto de la impresora `/dev/usb/lp0` en tu archivo `server/.env` por su equivalente de Windows (ej: `COM3`, `COM4` o una ruta de red compartida como `\\localhost\NombreImpresora`). Si no tienes impresora conectada, mantén `PRINTER_ENABLED=false` para ver el diseño del ticket simulado en la consola del backend.
-
----
-
-## 🔐 Credenciales de Prueba por Defecto
-
-*   **Administrador**: usuario `admin` / contraseña `admin123`
-*   **Cajero**: usuario `cajero` / contraseña `caja123`
+*   **Administrador**:
+    *   Usuario: `admin`
+    *   Contraseña: `admin123`
+*   **Cajero**:
+    *   Usuario: `cajero`
+    *   Contraseña: `caja123`
