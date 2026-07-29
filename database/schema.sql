@@ -52,8 +52,12 @@ CREATE TABLE productos (
     fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 CREATE INDEX idx_productos_nombre ON productos(nombre);
 CREATE INDEX idx_productos_codigo ON productos(codigo_barras);
+CREATE INDEX idx_productos_nombre_trgm ON productos USING gin (nombre gin_trgm_ops);
+CREATE INDEX idx_productos_codigo_trgm ON productos USING gin (codigo_barras gin_trgm_ops);
 
 -- =========================================================================
 
