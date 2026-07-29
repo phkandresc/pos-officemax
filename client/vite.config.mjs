@@ -9,7 +9,7 @@ export default defineConfig({
     plugins: [
         react(),
         tailwindcss(),
-        basicSsl(),
+        // basicSsl(), // Desactivado temporalmente para desarrollo LAN sin problemas de SSL en smartphones
         VitePWA({
             registerType: 'autoUpdate',
             manifest: {
