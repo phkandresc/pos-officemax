@@ -1,9 +1,9 @@
 import axios from 'axios';
 import useAuthStore from '../stores/useAuthStore';
 
-// Configuración global de axios
-// Usar la IP actual de la red local (necesario para acceso desde smartphones vía LAN)
-const API_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3000`;
+// Usar ruta relativa. El proxy de Vite (vite.config.mjs) redirigirá las 
+// peticiones '/api' hacia el backend. Esto evita problemas de Mixed Content en LAN (HTTPS -> HTTP)
+const API_URL = import.meta.env.VITE_API_URL || '';
 axios.defaults.baseURL = API_URL;
 
 // Interceptor global de peticiones
