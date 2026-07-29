@@ -292,6 +292,7 @@ const PosView = () => {
     const [ventasSesion, setVentasSesion] = useState([]);
     const [ventaExitosa, setVentaExitosa] = useState(null);
     const [reimprimiendo, setReimprimiendo] = useState(null);
+    const [activeMobileTab, setActiveMobileTab] = useState('productos');
 
     const searchInputRef = useRef(null);
     const debounceRef = useRef(null);
@@ -495,9 +496,31 @@ const PosView = () => {
 
     // --- Sesión de caja activa: Vista POS ---
     return (
-        <div className="flex flex-col lg:flex-row h-full animate-fade-in">
-            {/* ====== PANEL IZQUIERDO: Búsqueda ====== */}
-            <div className="flex-1 flex flex-col min-w-0 border-b lg:border-b-0 lg:border-r border-slate-200/80">
+        <div className="flex flex-col h-full animate-fade-in bg-slate-50">
+            {/* ====== MOBILE TABS ====== */}
+            <div className="lg:hidden flex border-b border-slate-200 bg-white shrink-0 shadow-sm z-10 relative">
+                <button
+                    onClick={() => setActiveMobileTab('productos')}
+                    className={`flex-1 py-3.5 text-sm font-bold transition-colors border-b-[3px] ${activeMobileTab === 'productos' ? 'border-brand-orange text-brand-orange' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                >
+                    Catálogo
+                </button>
+                <button
+                    onClick={() => setActiveMobileTab('carrito')}
+                    className={`flex-1 py-3.5 text-sm font-bold transition-colors border-b-[3px] flex items-center justify-center gap-2 ${activeMobileTab === 'carrito' ? 'border-brand-orange text-brand-orange' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                >
+                    Carrito
+                    {itemCount > 0 && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${activeMobileTab === 'carrito' ? 'bg-brand-orange text-white' : 'bg-slate-200 text-slate-600'}`}>
+                            {itemCount}
+                        </span>
+                    )}
+                </button>
+            </div>
+
+            <div className="flex flex-col lg:flex-row flex-1 min-h-0">
+                {/* ====== PANEL IZQUIERDO: Búsqueda ====== */}
+                <div className={`${activeMobileTab === 'productos' ? 'flex' : 'hidden'} lg:flex flex-1 flex-col min-w-0 border-r border-slate-200/80 bg-white`}>
                 {/* Header de caja */}
                 <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-100">
                     <div className="flex items-center gap-2">
@@ -650,7 +673,7 @@ const PosView = () => {
             </div>
 
             {/* ====== PANEL DERECHO: Carrito ====== */}
-            <div className="w-full lg:w-[400px] xl:w-[420px] flex flex-col bg-white shrink-0">
+            <div className={`${activeMobileTab === 'carrito' ? 'flex' : 'hidden'} lg:flex w-full lg:w-[400px] xl:w-[420px] flex-col bg-white shrink-0`}>
                 {/* Header carrito */}
                 <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
                     <div className="flex items-center gap-2">
@@ -701,10 +724,10 @@ const PosView = () => {
                                     <div className="flex items-center gap-1.5">
                                         <button
                                             onClick={() => cart.updateQty(item.producto_id, item.cantidad - 1)}
-                                            className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center 
-                                                       text-slate-500 hover:text-red-500 hover:border-red-200 transition-all"
+                                            className="w-10 h-10 lg:w-8 lg:h-8 rounded-xl lg:rounded-lg bg-white border border-slate-200 flex items-center justify-center 
+                                                       text-slate-500 hover:text-red-500 hover:border-red-200 transition-all active:bg-slate-50"
                                         >
-                                            <Minus size={13} />
+                                            <Minus size={16} />
                                         </button>
                                         <span className="w-8 text-center text-sm font-bold text-slate-800 tabular-nums">
                                             {item.cantidad}
@@ -717,21 +740,21 @@ const PosView = () => {
                                                 }
                                                 cart.updateQty(item.producto_id, item.cantidad + 1);
                                             }}
-                                            className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center 
-                                                       text-slate-500 hover:text-brand-orange hover:border-brand-orange/20 transition-all"
+                                            className="w-10 h-10 lg:w-8 lg:h-8 rounded-xl lg:rounded-lg bg-white border border-slate-200 flex items-center justify-center 
+                                                       text-slate-500 hover:text-brand-orange hover:border-brand-orange/20 transition-all active:bg-slate-50"
                                         >
-                                            <Plus size={13} />
+                                            <Plus size={16} />
                                         </button>
                                     </div>
 
                                     {/* Subtotal + eliminar */}
-                                    <div className="text-right shrink-0 w-16">
+                                    <div className="text-right shrink-0 min-w-[70px]">
                                         <p className="text-sm font-bold text-slate-800 tabular-nums">
                                             ${(item.precio_venta * item.cantidad).toFixed(2)}
                                         </p>
                                         <button
                                             onClick={() => cart.removeItem(item.producto_id)}
-                                            className="text-[10px] text-red-400 hover:text-red-600 font-medium transition-colors mt-0.5"
+                                            className="text-xs text-red-500 hover:text-red-600 font-medium transition-colors mt-1 py-1.5 px-2 -mr-2 rounded-lg hover:bg-red-50 active:bg-red-100"
                                         >
                                             Quitar
                                         </button>
@@ -873,6 +896,7 @@ const PosView = () => {
                         </button>
                     </div>
                 )}
+            </div>
             </div>
 
             {/* ====== MODALES ====== */}
