@@ -2,8 +2,26 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const logger = require('./config/logger');
+const { scheduleBackups } = require('./scripts/backup');
+
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Seguridad básica
+app.use(helmet());
+
+// Límite de peticiones (100 peticiones por ventana de 15 minutos por IP)
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, 
+    max: 100, 
+    message: { error: 'Demasiadas peticiones desde esta IP, por favor intente de nuevo en 15 minutos' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use('/api', limiter);
 
 // Configuración de CORS para la red local según contexto.md
 app.use(cors({
@@ -15,7 +33,7 @@ app.use(cors({
 app.use(express.json());
 
 app.use((req, res, next) => {
-    console.log(`[HTTP] ${req.method} ${req.url}`);
+    logger.info(`[HTTP] ${req.method} ${req.url}`);
     next();
 });
 
@@ -63,11 +81,33 @@ app.get('/api/db-test', async (req, res) => {
     }
 });
 
+// Manejo global de errores (Global Error Handler)
+app.use((err, req, res, next) => {
+    logger.error(`Error no manejado: ${err.message}`, { stack: err.stack, url: req.originalUrl });
+    
+    // Si la respuesta ya fue enviada, delegar al manejador por defecto de Express
+    if (res.headersSent) {
+        return next(err);
+    }
+
+    const statusCode = err.statusCode || 500;
+    const message = err.message || 'Error interno del servidor';
+    
+    res.status(statusCode).json({
+        status: 'error',
+        statusCode,
+        message: process.env.NODE_ENV === 'production' && statusCode === 500 ? 'Algo salió mal' : message,
+    });
+});
+
 const server = app.listen(port, () => {
-    console.log(`Servidor POS ejecutándose en http://localhost:${port}`);
-    console.log(`Accesible en la LAN para dispositivos móviles`);
+    logger.info(`Servidor POS ejecutándose en http://localhost:${port}`);
+    logger.info(`Accesible en la LAN para dispositivos móviles`);
+    
+    // Iniciar sistema de backups automáticos
+    scheduleBackups();
 });
 
 server.on('connection', (stream) => {
-    console.log('>>> Conexion TCP entrante desde', stream.remoteAddress);
+    logger.debug('>>> Conexion TCP entrante desde ' + stream.remoteAddress);
 });

@@ -1,11 +1,14 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 /**
  * Zustand Store para el carrito de compras del POS.
  * Maneja el estado del carrito, cálculos de IVA, método de pago,
  * selección de cliente, monto recibido y opción de impresión.
  */
-const useCartStore = create((set, get) => ({
+const useCartStore = create(
+    persist(
+        (set, get) => ({
     // Estado
     items: [],
     metodoPago: 'EFECTIVO',
@@ -144,7 +147,12 @@ const useCartStore = create((set, get) => ({
             monto_recibido: (!isNaN(montoRecibido) && montoRecibido > 0) ? montoRecibido : null,
             imprimir_ticket: state.imprimirTicket
         };
+    }),
+    {
+        name: 'pos-cart-storage', // nombre en localStorage
+        // Opcional: si quisieras guardar en sessionStorage en vez de local:
+        // getStorage: () => sessionStorage,
     }
-}));
+));
 
 export default useCartStore;
