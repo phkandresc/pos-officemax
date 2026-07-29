@@ -45,8 +45,10 @@ CREATE TABLE productos (
     precio_compra NUMERIC(10, 2) DEFAULT 0.00,
     precio_venta NUMERIC(10, 2) NOT NULL,
     stock_actual INTEGER DEFAULT 0,
+    stock_minimo INTEGER DEFAULT 5,
     graba_iva BOOLEAN DEFAULT TRUE, 
     activo BOOLEAN DEFAULT TRUE,
+    descripcion TEXT,
     fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -95,6 +97,7 @@ CREATE TABLE ventas (
     monto_iva NUMERIC(10, 2) DEFAULT 0.00,
     total_factura NUMERIC(10, 2) NOT NULL,
     
+    monto_recibido NUMERIC(10, 2),
     metodo_pago VARCHAR(20) DEFAULT 'EFECTIVO' CHECK (metodo_pago IN ('EFECTIVO', 'TRANSFERENCIA')),
     estado VARCHAR(20) DEFAULT 'COMPLETADA' CHECK (estado IN ('COMPLETADA', 'ANULADA'))
 );

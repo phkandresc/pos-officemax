@@ -1,3 +1,22 @@
+# Dependencies
 node_modules/
+.pnpm-store/
+
+# Environment Variables
 .env
+.env.local
+.env.*.local
+
+# Build Outputs
 dist/
+build/
+*.log
+
+# Temp files
+*.tmp
+out.txt
+test_file.txt
+
+# OS Files
+.DS_Store
+Thumbs.db
